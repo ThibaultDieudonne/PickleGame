@@ -24,6 +24,8 @@ class Interface:
         self.in_game = False
         self.has_to_run = True
         self.menu_size = (574, 232)
+        self.screen_size = (1366, 768)
+        self.step = 50
         self.ip = None
         self.port = None
         self.name = None
@@ -66,8 +68,12 @@ class Interface:
                 if event.type == pygame.QUIT:
                     self.has_to_run = False
                 if self.in_game:
+                    pass
+                else:
                     if 'click' in self.bplay.handleEvent(event):
-                        self.in_game = False
+                        self.in_game = True
+                        self.screen = pygame.display.set_mode(self.screen_size)
+                        
 
         
 
