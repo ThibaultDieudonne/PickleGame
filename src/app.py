@@ -20,6 +20,7 @@ import socket
 import sys
 from player import Player
 
+TICK_RATE = 60
 SEP_CHAR = '&'
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
@@ -66,7 +67,7 @@ class Interface:
         
         while self.has_to_run:
             pygame.display.update()
-            self.clock.tick(2)
+            self.clock.tick(TICK_RATE)
             self.screen.fill((0, 0, 0))
             if self.in_game:
                 candidate_packet = []
@@ -89,7 +90,6 @@ class Interface:
                 candidate_packet = [*map(str, candidate_packet)]
                 candidate_packet = SEP_CHAR.join(candidate_packet)
                 self.current_packet = self.client.send(candidate_packet)
-                print(self.current_packet)
                 self.update_packet()
                 pygame.draw.circle(self.screen, BLUE, (self.players[0].xpos, self.players[0].ypos), 20)
                 pygame.draw.circle(self.screen, RED, (self.players[1].xpos, self.players[1].ypos), 20)
