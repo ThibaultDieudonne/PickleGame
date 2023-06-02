@@ -143,7 +143,7 @@ class Client:
         for px in range(self.n_players):
             for i in range(1, 4):
                 npkt[4 * px + i] = int(npkt[4 * px + i])
-        # input(npkt)
+        input(npkt)
         return npkt
     
     def __del__(self):

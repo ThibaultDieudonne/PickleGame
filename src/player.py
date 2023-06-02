@@ -3,4 +3,4 @@ class Player:
         self.name = name
         self.xpos = xpos
         self.ypos = ypos
-        self.atk_cast = False
+        self.atk_cast = 0
