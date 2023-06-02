@@ -4,6 +4,6 @@ call activate main
 :lbl
 jupytext --to py server.ipynb
 python -m server
-echo Press any key to resart server
+echo Press any key to restart server
 pause>nul
 goto lbl

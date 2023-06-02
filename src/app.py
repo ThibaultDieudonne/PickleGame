@@ -89,6 +89,7 @@ class Interface:
                 candidate_packet = [*map(str, candidate_packet)]
                 candidate_packet = SEP_CHAR.join(candidate_packet)
                 self.current_packet = self.client.send(candidate_packet)
+                print(self.current_packet)
                 self.update_packet()
                 pygame.draw.circle(self.screen, BLUE, (self.players[0].xpos, self.players[0].ypos), 20)
                 pygame.draw.circle(self.screen, RED, (self.players[1].xpos, self.players[1].ypos), 20)

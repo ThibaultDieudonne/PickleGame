@@ -3,6 +3,6 @@ cls
 call activate main
 :lbl
 python -m app_test
-echo Press any key to resart app
+echo Press any key to restart app
 pause>nul
 goto lbl

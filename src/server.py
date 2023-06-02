@@ -67,8 +67,8 @@ class GameHandler:
         print (f'{self.game.players[client_idx].name} connected !')
         while True:
             try:
-                clientsocket.send(bytes(self.game.generate_packet(), 'utf-8'))
                 self.game.candidate_packet(clientsocket.recv(1024).decode("utf-8"), client_idx)
+                clientsocket.send(bytes(self.game.generate_packet(), 'utf-8'))
             except:
                 break
         clientsocket.close()
