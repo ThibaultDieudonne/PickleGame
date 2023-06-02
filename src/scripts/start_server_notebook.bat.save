@@ -1,5 +1,5 @@
 @echo off
 cls
 call activate main
-jupyter notebook server_notebook.ipynb
+jupyter notebook server.ipynb
 pause

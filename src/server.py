@@ -41,7 +41,7 @@ class Game:
 class GameHandler:
     def __init__(self):
         self.running = 1
-        self.HOST = "127.0.0.1"
+        self.HOST = "0.0.0.0"
         self.PORT = 50000
         self.clients = []
         self.game = Game()
