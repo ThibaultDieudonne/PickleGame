@@ -1,0 +1,8 @@
+@echo off
+cls
+call activate main
+:lbl
+python -m app_test
+echo Press any key to resart app
+pause>nul
+goto lbl

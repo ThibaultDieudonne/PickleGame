@@ -1,0 +1,9 @@
+@echo off
+cls
+call activate main
+:lbl
+jupytext --to py app.ipynb
+python -m app
+echo Press any key to resart app
+pause>nul
+goto lbl

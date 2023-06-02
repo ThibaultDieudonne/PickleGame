@@ -1,0 +1,5 @@
+@echo off
+cls
+call activate main
+jupyter notebook app.ipynb
+pause

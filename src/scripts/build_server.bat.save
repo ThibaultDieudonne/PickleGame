@@ -1,0 +1,9 @@
+@echo off
+cls
+call activate main
+:lbl
+jupytext --to py server.ipynb
+python -m server
+echo Press any key to resart server
+pause>nul
+goto lbl
