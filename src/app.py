@@ -32,7 +32,7 @@ class Client:
         self.menu_size = (115, 75)
         self.screen_size = (1366, 768)
         self.buffer = []
-        self.step = 50
+        self.step = 8
         self.ip = None
         self.port = None
         self.name = None
@@ -80,7 +80,6 @@ class Client:
                         candidate_player.xpos = max(0, candidate_player.xpos - self.step)
                     elif ctrl == 3:
                         candidate_player.xpos = min(self.screen_size[0], candidate_player.xpos + self.step)
-                self.buffer = []
                 self.current_packet = self.send(candidate_player.packet())
                 self.update_packet()
                 pygame.draw.circle(self.screen, BLUE, (self.players[0].xpos, self.players[0].ypos), 20)
@@ -101,6 +100,15 @@ class Client:
                             self.buffer.append(2)
                         if event.key == pygame.K_RIGHT:
                             self.buffer.append(3)
+                    if event.type == pygame.KEYUP:
+                        if event.key == pygame.K_UP:
+                            self.buffer.remove(0)
+                        if event.key == pygame.K_DOWN:
+                            self.buffer.remove(1)
+                        if event.key == pygame.K_LEFT:
+                            self.buffer.remove(2)
+                        if event.key == pygame.K_RIGHT:
+                            self.buffer.remove(3)
 
                 else:
                     if 'click' in self.bplay.handleEvent(event):
