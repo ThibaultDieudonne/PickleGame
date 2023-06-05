@@ -18,7 +18,9 @@ import pygame
 import pygbutton
 import socket
 import sys
-from player import Player, SEP_CHAR, MAP_SIZE
+import pickle
+from util import Player, DataHandler, MAP_SIZE
+import random
 
 TICK_RATE = 60
 BLUE = (0, 0, 255)
@@ -36,11 +38,8 @@ class Client:
         self.ip = None
         self.port = None
         self.name = None
-        self.current_packet = None
         self.socket = None
-        ref_player = Player("default")
-        self.n_args = ref_player.args_count()
-        self.players = []
+        self.game_data = DataHandler()
         with open('game.cfg', 'rb') as f:
             config = f.readlines()
         for line in config:
@@ -51,7 +50,7 @@ class Client:
                 elif tmp[0] == "port":
                     self.port = int(tmp[1])
                 elif tmp[0] == "name":
-                    self.name = tmp[1]
+                    self.name = tmp[1] + "#" + str(random.randint(1000, 9999))
         if self.ip is None or self.port is None or self.name is None:
             raise Exception("Missing ip, port or name in game.cfg")
         else:
@@ -72,7 +71,7 @@ class Client:
             self.clock.tick(TICK_RATE)
             self.screen.fill((0, 0, 0))
             if self.in_game:
-                candidate_player = self.players[self.idx].clone()
+                candidate_player = self.game_data.players[self.game_data.indexes[self.name]].clone()
                 for ctrl in self.buffer:
                     if ctrl == 0:
                         candidate_player.ypos = max(0, candidate_player.ypos - self.step)
@@ -82,10 +81,9 @@ class Client:
                         candidate_player.xpos = max(0, candidate_player.xpos - self.step)
                     elif ctrl == 3:
                         candidate_player.xpos = min(self.screen_size[0], candidate_player.xpos + self.step)
-                self.current_packet = self.send(candidate_player.packet())
-                self.update_packet()
-                pygame.draw.circle(self.screen, BLUE, (self.players[0].xpos, self.players[0].ypos), 20)
-                pygame.draw.circle(self.screen, RED, (self.players[1].xpos, self.players[1].ypos), 20)
+                self.send_and_update(candidate_player)
+                pygame.draw.circle(self.screen, BLUE, (self.game_data.players[0].xpos, self.game_data.players[0].ypos), 20)
+                pygame.draw.circle(self.screen, RED, (self.game_data.players[1].xpos, self.game_data.players[1].ypos), 20)
             else:
                 self.bplay.draw(self.screen)
                 
@@ -111,37 +109,24 @@ class Client:
                             self.buffer.remove(2)
                         if event.key == pygame.K_RIGHT:
                             self.buffer.remove(3)
-
                 else:
                     if 'click' in self.bplay.handleEvent(event):
                         self.in_game = True
                         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         self.socket.connect((self.ip, self.port))
-                        self.current_packet = self.send(self.name)
-                        for pl in range(int(self.current_packet[-2])):
-                            self.players.append(Player("default"))
-                        self.idx = int(self.current_packet[-1])
-                        self.update_packet()
+                        self.send_and_update(self.name)
                         self.screen = pygame.display.set_mode(self.screen_size)
-                        
-    def update_packet(self):
-        self.players[0].name = self.current_packet[0]
-        self.players[0].xpos = self.current_packet[1]
-        self.players[0].ypos = self.current_packet[2]
-        self.players[0].atk_cast = self.current_packet[3]
-        self.players[1].name = self.current_packet[4]
-        self.players[1].xpos = self.current_packet[5]
-        self.players[1].ypos = self.current_packet[6]
-        self.players[1].atk_cast = self.current_packet[7]
         
         
-    def send(self, pkt):
-        self.socket.send(bytes(pkt, 'utf-8'))
-        npkt = self.socket.recv(1024).decode("utf-8").split(SEP_CHAR)
-        for px in range(len(self.players)):
-            for i in range(1, self.n_args):
-                npkt[self.n_args * px + i] = int(npkt[self.n_args * px + i])
-        return npkt
+    def send_and_update(self, packet):
+        if isinstance(packet, str):
+            packet = bytes(packet, "utf-8")
+        else:
+            packet = pickle.dumps(packet)
+        self.socket.send(packet)
+        tmp_data = pickle.loads(self.socket.recv(1024))
+        self.game_data = tmp_data
+
     
     def __del__(self):
         if self.socket is not None:
@@ -152,5 +137,7 @@ if __name__=="__main__":
     client = Client()
     client.display()
 # -
+
+
 
 
