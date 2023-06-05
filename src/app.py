@@ -18,7 +18,7 @@ import pygame
 import pygbutton
 import socket
 import sys
-from player import Player, SEP_CHAR
+from player import Player, SEP_CHAR, MAP_SIZE
 
 TICK_RATE = 60
 BLUE = (0, 0, 255)
@@ -30,15 +30,17 @@ class Client:
         self.in_game = False
         self.has_to_run = True
         self.menu_size = (115, 75)
-        self.screen_size = (1366, 768)
+        self.screen_size = MAP_SIZE
         self.buffer = []
         self.step = 8
         self.ip = None
         self.port = None
         self.name = None
         self.current_packet = None
-        self.players = [Player("p1", 10, 10), Player("p2", 490, 490)]
-        self.n_args = self.players[0].args_count()
+        self.socket = None
+        ref_player = Player("default")
+        self.n_args = ref_player.args_count()
+        self.players = []
         with open('game.cfg', 'rb') as f:
             config = f.readlines()
         for line in config:
@@ -116,6 +118,8 @@ class Client:
                         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         self.socket.connect((self.ip, self.port))
                         self.current_packet = self.send(self.name)
+                        for pl in range(int(self.current_packet[-2])):
+                            self.players.append(Player("default"))
                         self.idx = int(self.current_packet[-1])
                         self.update_packet()
                         self.screen = pygame.display.set_mode(self.screen_size)
@@ -140,7 +144,8 @@ class Client:
         return npkt
     
     def __del__(self):
-        self.socket.close()
+        if self.socket is not None:
+            self.socket.close()
         
                 
 if __name__=="__main__":

@@ -1,4 +1,5 @@
 SEP_CHAR = '&'
+MAP_SIZE = (1024, 512)
 
 class Player:
     def __init__(self, name, xpos=0, ypos=0, atk_cast=0):

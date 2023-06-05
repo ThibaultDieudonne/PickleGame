@@ -15,20 +15,42 @@
 # +
 import socket
 from threading import Thread
-from player import Player, SEP_CHAR
-        
+from player import Player, SEP_CHAR, MAP_SIZE
+
+BASE_LOCS = [(16, 16),
+             (MAP_SIZE[0] - 16, MAP_SIZE[1] - 16),
+             (16, MAP_SIZE[1] - 16),
+             (MAP_SIZE[0] - 16, 16)]
+
 class Server:
     def __init__(self):
         self.running = 1
         self.HOST = "0.0.0.0"
         self.PORT = 50000
         self.clients = []
-        self.players = [Player("p1", 10, 10), Player("p2", 490, 490)]
+        self.players = []
+        with open('server.cfg', 'rb') as f:
+            config = f.readlines()
+        for line in config:
+            tmp = line.decode("utf-8").replace('\n', '').replace('\r', '').replace(' ', '').split(':')
+            if len(tmp) == 2:
+                if tmp[0] == "nplayers":
+                    for pl in range(int(tmp[1])):
+                        self.players.append(Player("default", BASE_LOCS[pl][0], BASE_LOCS[pl][1]))
         
     def start(self):
         self.server_thread = Thread(target=self.run_server)
         self.server_thread.start()
+        self.cli_thread = Thread(target=self.CLI_entry)
+        self.cli_thread.start()
+        # game events goes here
         
+    def CLI_entry(self):
+        while True:
+            command = input("$:")
+            if command == "players":
+                print(f"Connected players: {', '.join([pl.name for pl in self.players if pl.name != 'default'])}")
+            
     def run_server(self):
         self.sock = socket.socket()
         self.sock.bind((self.HOST, self.PORT))
@@ -42,8 +64,10 @@ class Server:
         
     def on_new_client(self, clientsocket, addr, client_idx):
         self.players[client_idx].name = clientsocket.recv(1024).decode("utf-8")
-        clientsocket.send(bytes(self.generate_packet() + SEP_CHAR + str(client_idx), 'utf-8'))
-        print (f'{self.players[client_idx].name} connected !')
+        packet = self.generate_packet()
+        packet += SEP_CHAR + str(len(self.players))
+        packet += SEP_CHAR + str(client_idx)
+        clientsocket.send(bytes(packet, 'utf-8'))
         while True:
             try:
                 self.players[client_idx].update(clientsocket.recv(1024).decode("utf-8"))
