@@ -18,15 +18,14 @@ import pygame
 import pygbutton
 import socket
 import sys
-from player import Player
+from player import Player, SEP_CHAR
 
 TICK_RATE = 60
-SEP_CHAR = '&'
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 
-class Interface:
+class Client:
     def __init__(self):
         self.in_game = False
         self.has_to_run = True
@@ -39,6 +38,7 @@ class Interface:
         self.name = None
         self.current_packet = None
         self.players = [Player("p1", 10, 10), Player("p2", 490, 490)]
+        self.n_args = self.players[0].args_count()
         with open('game.cfg', 'rb') as f:
             config = f.readlines()
         for line in config:
@@ -70,26 +70,18 @@ class Interface:
             self.clock.tick(TICK_RATE)
             self.screen.fill((0, 0, 0))
             if self.in_game:
-                candidate_packet = []
-                for p in self.players:
-                    candidate_packet.extend([p.name, p.xpos, p.ypos, p.atk_cast])
+                candidate_player = self.players[self.idx].clone()
                 for ctrl in self.buffer:
                     if ctrl == 0:
-                        candidate_packet[4 * self.idx + 2] = max(0,
-                                                                  candidate_packet[4 * self.idx + 2] - self.step)
+                        candidate_player.ypos = max(0, candidate_player.ypos - self.step)
                     elif ctrl == 1:
-                        candidate_packet[4 * self.idx + 2] = min(self.screen_size[1],
-                                                                  candidate_packet[4 * self.idx + 2] + self.step)
+                        candidate_player.ypos = min(self.screen_size[1], candidate_player.ypos + self.step)
                     elif ctrl == 2:
-                        candidate_packet[4 * self.idx + 1] = max(0,
-                                                                  candidate_packet[4 * self.idx + 1] - self.step)
+                        candidate_player.xpos = max(0, candidate_player.xpos - self.step)
                     elif ctrl == 3:
-                        candidate_packet[4 * self.idx + 1] = min(self.screen_size[0],
-                                                                  candidate_packet[4 * self.idx + 1] + self.step)
+                        candidate_player.xpos = min(self.screen_size[0], candidate_player.xpos + self.step)
                 self.buffer = []
-                candidate_packet = [*map(str, candidate_packet)]
-                candidate_packet = SEP_CHAR.join(candidate_packet)
-                self.current_packet = self.client.send(candidate_packet)
+                self.current_packet = self.send(candidate_player.packet())
                 self.update_packet()
                 pygame.draw.circle(self.screen, BLUE, (self.players[0].xpos, self.players[0].ypos), 20)
                 pygame.draw.circle(self.screen, RED, (self.players[1].xpos, self.players[1].ypos), 20)
@@ -113,9 +105,10 @@ class Interface:
                 else:
                     if 'click' in self.bplay.handleEvent(event):
                         self.in_game = True
-                        self.client = Client(self.ip, self.port, len(self.players))
-                        self.current_packet = self.client.send(self.name)
-                        self.idx = int(self.current_packet[8])
+                        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        self.socket.connect((self.ip, self.port))
+                        self.current_packet = self.send(self.name)
+                        self.idx = int(self.current_packet[-1])
                         self.update_packet()
                         self.screen = pygame.display.set_mode(self.screen_size)
                         
@@ -129,22 +122,13 @@ class Interface:
         self.players[1].ypos = self.current_packet[6]
         self.players[1].atk_cast = self.current_packet[7]
         
-
-class Client:
-    def __init__(self, ip, port, npl):
-        self.HOST = ip
-        self.PORT = port
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.HOST, self.PORT))
-        self.n_players = npl
         
     def send(self, pkt):
         self.socket.send(bytes(pkt, 'utf-8'))
         npkt = self.socket.recv(1024).decode("utf-8").split(SEP_CHAR)
-        for px in range(self.n_players):
-            for i in range(1, 4):
-                npkt[4 * px + i] = int(npkt[4 * px + i])
-        # input(npkt)
+        for px in range(len(self.players)):
+            for i in range(1, self.n_args):
+                npkt[self.n_args * px + i] = int(npkt[self.n_args * px + i])
         return npkt
     
     def __del__(self):
@@ -152,7 +136,7 @@ class Client:
         
                 
 if __name__=="__main__":
-    client = Interface()
+    client = Client()
     client.display()
 # -
 
