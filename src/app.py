@@ -13,14 +13,9 @@
 # ---
 
 # +
-from threading import Thread
+from util import *
 import pygame
 import pygbutton
-import socket
-import sys
-import pickle
-from util import Player, DataHandler, MAP_SIZE
-import random
 
 TICK_RATE = 60
 BLUE = (0, 0, 255)
@@ -34,16 +29,18 @@ class Client:
         self.menu_size = (115, 75)
         self.screen_size = MAP_SIZE
         self.buffer = []
-        self.step = 8
         self.ip = None
         self.port = None
         self.name = None
         self.socket = None
-        self.game_data = DataHandler()
+        self.game_data = None
         with open('game.cfg', 'rb') as f:
             config = f.readlines()
         for line in config:
-            tmp = line.decode("utf-8").replace('\n', '').replace('\r', '').replace(' ', '').split(':')
+            tmp = line.decode("utf-8").replace('\n', '').replace('\r', '').replace(' ', '')
+            if "#" in tmp:
+                tmp = tmp.split("#")[0]
+            tmp = tmp.split(':')
             if len(tmp) == 2:
                 if tmp[0] == "ip":
                     self.ip = tmp[1]
@@ -74,16 +71,19 @@ class Client:
                 candidate_player = self.game_data.players[self.game_data.indexes[self.name]].clone()
                 for ctrl in self.buffer:
                     if ctrl == 0:
-                        candidate_player.ypos = max(0, candidate_player.ypos - self.step)
+                        candidate_player.yloc = max(0, candidate_player.yloc - STEP)
                     elif ctrl == 1:
-                        candidate_player.ypos = min(self.screen_size[1], candidate_player.ypos + self.step)
+                        candidate_player.yloc = min(self.screen_size[1], candidate_player.yloc + STEP)
                     elif ctrl == 2:
-                        candidate_player.xpos = max(0, candidate_player.xpos - self.step)
+                        candidate_player.xloc = max(0, candidate_player.xloc - STEP)
                     elif ctrl == 3:
-                        candidate_player.xpos = min(self.screen_size[0], candidate_player.xpos + self.step)
+                        candidate_player.xloc = min(self.screen_size[0], candidate_player.xloc + STEP)
                 self.send_and_update(candidate_player)
-                pygame.draw.circle(self.screen, BLUE, (self.game_data.players[0].xpos, self.game_data.players[0].ypos), 20)
-                pygame.draw.circle(self.screen, RED, (self.game_data.players[1].xpos, self.game_data.players[1].ypos), 20)
+                pygame.draw.circle(self.screen, BLUE, (self.game_data.players[0].xloc, self.game_data.players[0].yloc), 20)
+                pygame.draw.circle(self.screen, GREEN, (self.game_data.players[1].xloc, self.game_data.players[1].yloc), 20)
+                for opponent in self.game_data.opponents:
+                    print("ok")
+                    pygame.draw.circle(self.screen, RED, (opponent.xloc, opponent.yloc), opponent.size)
             else:
                 self.bplay.draw(self.screen)
                 
@@ -124,7 +124,7 @@ class Client:
         else:
             packet = pickle.dumps(packet)
         self.socket.send(packet)
-        tmp_data = pickle.loads(self.socket.recv(1024))
+        tmp_data = pickle.loads(self.socket.recv(BUFFER_SIZE))
         self.game_data = tmp_data
 
     

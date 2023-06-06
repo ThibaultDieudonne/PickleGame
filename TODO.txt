@@ -1,0 +1,6 @@
+Implement opponents projectiles
+ Fix their speed (vertical_speed > horizontal_speed)
+Implement collision
+Implement player health
+Implement game restart
+Implement real opponents
