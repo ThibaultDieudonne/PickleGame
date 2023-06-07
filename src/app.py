@@ -82,7 +82,6 @@ class Client:
                 pygame.draw.circle(self.screen, BLUE, (self.game_data.players[0].xloc, self.game_data.players[0].yloc), 20)
                 pygame.draw.circle(self.screen, GREEN, (self.game_data.players[1].xloc, self.game_data.players[1].yloc), 20)
                 for opponent in self.game_data.opponents:
-                    print("ok")
                     pygame.draw.circle(self.screen, RED, (opponent.xloc, opponent.yloc), opponent.size)
             else:
                 self.bplay.draw(self.screen)

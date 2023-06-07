@@ -1,3 +1,18 @@
+# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.5
+#   kernelspec:
+#     display_name: Python 3
+#     language: python
+#     name: python3
+# ---
+
+# +
 import sys
 import random
 import time
@@ -5,9 +20,11 @@ import pickle
 import socket
 from threading import Thread
 
+
 MAP_SIZE = (1024, 512)
 BUFFER_SIZE = 16384
 STEP = 8
+
 
 class DataHandler:
     def __init__(self):
@@ -15,49 +32,56 @@ class DataHandler:
         self.indexes = {}
         self.opponents = []
 
+        
 class Player:
     def __init__(self, name, xloc=0, yloc=0, atk_cast=0):
         self.name = name
         self.xloc = xloc
         self.yloc = yloc
         self.atk_cast = 0
-
-    def args_count(self):
-        return len(vars(self))
+    
     
     def clone(self):
         return Player(self.name, self.xloc, self.yloc, self.atk_cast)
-    
-    def packet(self):
-        vrs = vars(self)
-        return SEP_CHAR.join([str(vrs[v])for v in vrs])
 
+    
 class Opponent:
-    def __init__(self, targets, size=5, speed=1):
-        self.active = 1
-        self.current_tick = -1
+    def __init__(self, targets, size=5, speed=2):
         self.size = size
         self.speed = speed
-        target = random.choice(targets)
-        xloc = random.randint(size, MAP_SIZE[0] - size)
-        yloc = random.randint(size, MAP_SIZE[1] - size)
-        traj_lead = (target.yloc - yloc) / (target.xloc - xloc)
-        traj_flat = target.yloc - target.xloc * traj_lead
-        self.trajectory = []
-        for moving_x in range(0, MAP_SIZE[0], STEP):
-            moving_y = int(traj_lead * moving_x + traj_flat)
-            if moving_y >= 0 and moving_y <= MAP_SIZE[1]:
-                self.trajectory.append((moving_x, moving_y))
-        if random.randint(0, 1):
-            self.trajectory = self.trajectory[::-1]
+        self.tick_count = 0
+        target = targets[0] # target = random.choice(targets) # warning: debug only
+        self.xloc, self.yloc = get_random_border_location()
+        self.ini_xloc, self.ini_yloc = self.xloc, self.yloc
+        vec_x, vec_y = target.xloc - self.xloc, target.yloc - self.yloc
+        reduce_factor = self.speed / ((vec_x**2 + vec_y**2)**.5)
+        self.vec_x = vec_x * reduce_factor
+        self.vec_y = vec_y * reduce_factor
         self.tick()
+        
     
     def tick(self):
-        self.current_tick += 1
-        if self.current_tick == len(self.trajectory):
+        next_x = int(self.ini_xloc + self.tick_count * self.vec_x)
+        next_y = int(self.ini_yloc + self.tick_count * self.vec_y)
+        if next_x < 0 or next_x > MAP_SIZE[0] or next_y < 0 or next_y > MAP_SIZE[1]:
             return 0
-        self.xloc = self.trajectory[self.current_tick][0]
-        self.yloc = self.trajectory[self.current_tick][1]
-        return 1
+        self.xloc = next_x
+        self.yloc = next_y
+        self.tick_count += 1
+        return 1 
         
+        
+def get_random_location():
+    return (random.randint(0, MAP_SIZE[0]), random.randint(0, MAP_SIZE[1]))
+
+
+def get_random_border_location():
+    xory = random.randint(0, 1)
+    if xory:
+        return (random.randint(0, MAP_SIZE[1 - xory]), MAP_SIZE[xory] * random.randint(0, 1))
+    else:
+        return (MAP_SIZE[xory] * random.randint(0, 1), random.randint(0, MAP_SIZE[1 - xory]))
+
+# -
+
 

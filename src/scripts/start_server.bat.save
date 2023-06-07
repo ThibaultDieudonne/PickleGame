@@ -2,6 +2,7 @@
 cls
 call activate main
 :lbl
+jupytext --to py util.ipynb
 jupytext --to py server.ipynb
 python -m server
 echo Press any key to restart server
