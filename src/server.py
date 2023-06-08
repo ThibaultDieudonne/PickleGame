@@ -29,6 +29,7 @@ class Server:
         self.PORT = 50000
         self.clients = []
         self.game_data = DataHandler()
+        self.ticks = 0
         with open('server.cfg', 'rb') as f:
             config = f.readlines()
         for line in config:
@@ -52,15 +53,16 @@ class Server:
 
                        
     def run(self):
-        ticks = 0
         while self.running:
             time.sleep(.01)
-            if not (ticks % 100):
+            # spawn opponents
+            if not (self.ticks % 100):
                 self.game_data.opponents.append(Opponent(self.game_data.players))
+            # move opponents
             for opp_idx in range(len(self.game_data.opponents) - 1, -1, -1):
                 if not self.game_data.opponents[opp_idx].tick():
                     del self.game_data.opponents[opp_idx]
-            ticks += 1
+            self.ticks += 1
         
             
     def run_server(self):
@@ -102,14 +104,14 @@ class Server:
             command = input("$:")
             if command == "players":
                 print(f"Connected players: {', '.join([pl.name for pl in self.game_data.players if pl.name != 'default'])}")
-            if command == "stop":
+            if command == "pause" or command == "p":
                 if self.running:
                     self.running = False
                     self.runner.join()
                     print("Game has stopped")
                 else:
                     print("Game has already stopped")
-            if command == "start":
+            if command == "start" or command == "resume" or command == "s" or command == "r":
                 if not self.running:
                     self.running = True
                     self.runner = Thread(target=self.run)
@@ -124,8 +126,8 @@ class Server:
                 self.server_running = False
                 self.server_thread.join()
                 sys.exit(0)  
-        
-        
+
+
 if __name__=="__main__":
     server = Server()
     server.start()

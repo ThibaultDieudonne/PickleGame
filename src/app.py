@@ -14,13 +14,19 @@
 
 # +
 from util import *
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import pygbutton
+
 
 TICK_RATE = 60
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
+YELLOW = (255, 255, 0)
+PURPLE = (255, 0, 255)
 RED = (255, 0, 0)
+PLAYER_COLORS = (BLUE, GREEN, YELLOW, PURPLE)
+
 
 class Client:
     def __init__(self):
@@ -50,8 +56,8 @@ class Client:
                     self.name = tmp[1] + "#" + str(random.randint(1000, 9999))
         if self.ip is None or self.port is None or self.name is None:
             raise Exception("Missing ip, port or name in game.cfg")
-        else:
-            print(f'[{self.name}@{self.ip}:{self.port}]')
+        # else:
+        #     print(f'[{self.name}@{self.ip}:{self.port}]')
                        
     def display(self):
         pygame.init()
@@ -79,8 +85,8 @@ class Client:
                     elif ctrl == 3:
                         candidate_player.xloc = min(self.screen_size[0], candidate_player.xloc + STEP)
                 self.send_and_update(candidate_player)
-                pygame.draw.circle(self.screen, BLUE, (self.game_data.players[0].xloc, self.game_data.players[0].yloc), 20)
-                pygame.draw.circle(self.screen, GREEN, (self.game_data.players[1].xloc, self.game_data.players[1].yloc), 20)
+                for pl_idx, pl in enumerate(self.game_data.players):
+                    pygame.draw.circle(self.screen, PLAYER_COLORS[pl_idx], (pl.xloc, pl.yloc), pl.size)
                 for opponent in self.game_data.opponents:
                     pygame.draw.circle(self.screen, RED, (opponent.xloc, opponent.yloc), opponent.size)
             else:
@@ -118,13 +124,17 @@ class Client:
         
         
     def send_and_update(self, packet):
-        if isinstance(packet, str):
-            packet = bytes(packet, "utf-8")
-        else:
-            packet = pickle.dumps(packet)
-        self.socket.send(packet)
-        tmp_data = pickle.loads(self.socket.recv(BUFFER_SIZE))
-        self.game_data = tmp_data
+        try:
+            if isinstance(packet, str):
+                packet = bytes(packet, "utf-8")
+            else:
+                packet = pickle.dumps(packet)
+            self.socket.send(packet)
+            tmp_data = pickle.loads(self.socket.recv(BUFFER_SIZE))
+            self.game_data = tmp_data
+        except Exception as e:
+            print(e) # warning: debug only
+            sys.exit(0)
 
     
     def __del__(self):
@@ -136,7 +146,5 @@ if __name__=="__main__":
     client = Client()
     client.display()
 # -
-
-
 
 

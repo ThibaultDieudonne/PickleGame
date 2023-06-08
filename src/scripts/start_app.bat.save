@@ -1,10 +1,6 @@
 @echo off
 cls
 call activate main
-:lbl
-jupytext --to py util.ipynb
-jupytext --to py app.ipynb
+jupytext --to py app.ipynb>nul
 python -m app
-echo Press any key to restart app
-pause>nul
-goto lbl
+exit 0

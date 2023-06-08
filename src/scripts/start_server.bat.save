@@ -1,10 +1,13 @@
 @echo off
 cls
+title PickleGame
 call activate main
 :lbl
-jupytext --to py util.ipynb
-jupytext --to py server.ipynb
+jupytext --to py util.ipynb>nul
+jupytext --to py server.ipynb>nul
+start /b start_app.bat
 python -m server
+title PickleGame
 echo Press any key to restart server
 pause>nul
 goto lbl

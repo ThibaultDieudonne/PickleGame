@@ -13,6 +13,7 @@
 # ---
 
 # +
+import os
 import sys
 import random
 import time
@@ -34,11 +35,12 @@ class DataHandler:
 
         
 class Player:
-    def __init__(self, name, xloc=0, yloc=0, atk_cast=0):
+    def __init__(self, name, xloc=0, yloc=0, atk_cast=0, size=20):
         self.name = name
         self.xloc = xloc
         self.yloc = yloc
         self.atk_cast = 0
+        self.size = size
     
     
     def clone(self):
@@ -46,7 +48,7 @@ class Player:
 
     
 class Opponent:
-    def __init__(self, targets, size=5, speed=2):
+    def __init__(self, targets, size=5, speed=1):
         self.size = size
         self.speed = speed
         self.tick_count = 0
@@ -54,7 +56,7 @@ class Opponent:
         self.xloc, self.yloc = get_random_border_location()
         self.ini_xloc, self.ini_yloc = self.xloc, self.yloc
         vec_x, vec_y = target.xloc - self.xloc, target.yloc - self.yloc
-        reduce_factor = self.speed / ((vec_x**2 + vec_y**2)**.5)
+        reduce_factor = self.speed / distance(vec_x, vec_y)
         self.vec_x = vec_x * reduce_factor
         self.vec_y = vec_y * reduce_factor
         self.tick()
@@ -76,12 +78,24 @@ def get_random_location():
 
 
 def get_random_border_location():
-    xory = random.randint(0, 1)
+    xory = random.randint(0, 1) # warning: probability doesnt rely on border size
     if xory:
         return (random.randint(0, MAP_SIZE[1 - xory]), MAP_SIZE[xory] * random.randint(0, 1))
     else:
         return (MAP_SIZE[xory] * random.randint(0, 1), random.randint(0, MAP_SIZE[1 - xory]))
 
+
+def distance(x1, y1, x2=None, y2=None):
+    if x2 is not None:
+        x1 -= x2
+    if y2 is not None:
+        y1 -= y2
+    return (x1**2 + y1**2)**.5
+
+
+if __name__=="__main__":
+    print("You're doing it wrong")
+    
 # -
 
 
