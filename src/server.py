@@ -43,11 +43,6 @@ class Server:
     def start(self):
         self.server_thread = Thread(target=self.run_server)
         self.server_thread.start()
-        # warning: debug only
-        self.running = True
-        self.runner = Thread(target=self.run)
-        self.runner.start()
-        ###
         if self.cli_enabled:
             self.cli()
 
@@ -55,13 +50,18 @@ class Server:
     def run(self):
         while self.running:
             time.sleep(.01)
-            # spawn opponents
             if not (self.ticks % 100):
                 self.game_data.opponents.append(Opponent(self.game_data.players))
-            # move opponents
             for opp_idx in range(len(self.game_data.opponents) - 1, -1, -1):
-                if not self.game_data.opponents[opp_idx].tick():
+                opp = self.game_data.opponents[opp_idx]
+                if opp.tick():
+                    for pl_idx, pl in enumerate(self.game_data.players):
+                        if distance(opp.xloc, opp.yloc, pl.xloc, pl.yloc) <= opp.size + pl.size:
+                            self.game_data.damage_taken[pl_idx] += opp.damage
+                            del self.game_data.opponents[opp_idx]
+                else:
                     del self.game_data.opponents[opp_idx]
+
             self.ticks += 1
         
             
@@ -73,7 +73,7 @@ class Server:
         while self.server_running:
             try:
                 c, addr = self.sock.accept()
-                client_idx = min(len(self.clients), 1) # warning: debug only
+                client_idx = len(self.clients)
                 self.clients.append(Thread(target=self.client_handler, args=(c, addr, client_idx)))
                 self.clients[-1].start()
             except socket.timeout:
@@ -84,18 +84,19 @@ class Server:
         
         
     def client_handler(self, clientsocket, addr, client_idx):
-        self.game_data.players[client_idx].name = clientsocket.recv(BUFFER_SIZE).decode("utf-8")
-        self.game_data.indexes[self.game_data.players[client_idx].name] = client_idx
-        packet = pickle.dumps(self.game_data)
-        clientsocket.send(packet)
-        while self.server_running:
-            try:
-                tmp_player = pickle.loads(clientsocket.recv(BUFFER_SIZE))
-                self.game_data.players[client_idx] = tmp_player
-                packet = pickle.dumps(self.game_data)
-                clientsocket.send(packet)
-            except:
-                break
+        if client_idx < len(self.game_data.players):
+            self.game_data.players[client_idx].name = clientsocket.recv(BUFFER_SIZE).decode("utf-8")
+            self.game_data.indexes[self.game_data.players[client_idx].name] = client_idx
+            packet = pickle.dumps(self.game_data)
+            clientsocket.send(packet)
+            while self.server_running:
+                try:
+                    tmp_player = pickle.loads(clientsocket.recv(BUFFER_SIZE))
+                    self.game_data.players[client_idx] = tmp_player
+                    packet = pickle.dumps(self.game_data)
+                    clientsocket.send(packet)
+                except:
+                    break
         clientsocket.close()
                   
             

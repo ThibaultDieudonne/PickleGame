@@ -25,6 +25,8 @@ GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
 PURPLE = (255, 0, 255)
 RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 PLAYER_COLORS = (BLUE, GREEN, YELLOW, PURPLE)
 
 
@@ -63,16 +65,16 @@ class Client:
         pygame.init()
         pygame.font.init()
         pygame.display.set_caption("Pickle Game")
-        self.font = pygame.font.SysFont('Berlin Sans FB', 30)
+        self.font = pygame.font.SysFont('Berlin Sans FB', 15)
         self.screen = pygame.display.set_mode(self.menu_size)
         self.clock = pygame.time.Clock()
-        self.screen.fill((0, 0, 0))
+        self.screen.fill(BLACK)
         self.bplay = pygbutton.PygButton((20, 20, 75, 35), 'Play !')
         
         while self.has_to_run:
             pygame.display.update()
             self.clock.tick(TICK_RATE)
-            self.screen.fill((0, 0, 0))
+            self.screen.fill(BLACK)
             if self.in_game:
                 candidate_player = self.game_data.players[self.game_data.indexes[self.name]].clone()
                 for ctrl in self.buffer:
@@ -89,6 +91,9 @@ class Client:
                     pygame.draw.circle(self.screen, PLAYER_COLORS[pl_idx], (pl.xloc, pl.yloc), pl.size)
                 for opponent in self.game_data.opponents:
                     pygame.draw.circle(self.screen, RED, (opponent.xloc, opponent.yloc), opponent.size)
+                self.screen.blit(self.font.render("Damages taken:", False, WHITE), (2, 2))
+                for pl_idx, pl in enumerate(self.game_data.players):
+                    self.screen.blit(self.font.render(f"{pl.name}: {self.game_data.damage_taken[pl_idx]}", False, WHITE), (2, 22 + 20 * pl_idx))
             else:
                 self.bplay.draw(self.screen)
                 
@@ -133,7 +138,6 @@ class Client:
             tmp_data = pickle.loads(self.socket.recv(BUFFER_SIZE))
             self.game_data = tmp_data
         except Exception as e:
-            print(e) # warning: debug only
             sys.exit(0)
 
     

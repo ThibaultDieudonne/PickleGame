@@ -30,6 +30,7 @@ STEP = 8
 class DataHandler:
     def __init__(self):
         self.players = []
+        self.damage_taken = [0 for _ in range(4)]
         self.indexes = {}
         self.opponents = []
 
@@ -44,15 +45,16 @@ class Player:
     
     
     def clone(self):
-        return Player(self.name, self.xloc, self.yloc, self.atk_cast)
+        return Player(self.name, self.xloc, self.yloc, self.atk_cast, self.size)
 
     
 class Opponent:
-    def __init__(self, targets, size=5, speed=1):
+    def __init__(self, targets, size=5, speed=1, damage=10):
         self.size = size
         self.speed = speed
+        self.damage = damage
         self.tick_count = 0
-        target = targets[0] # target = random.choice(targets) # warning: debug only
+        target = random.choice(targets)
         self.xloc, self.yloc = get_random_border_location()
         self.ini_xloc, self.ini_yloc = self.xloc, self.yloc
         vec_x, vec_y = target.xloc - self.xloc, target.yloc - self.yloc

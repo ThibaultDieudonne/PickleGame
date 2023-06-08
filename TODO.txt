@@ -1,5 +1,4 @@
-Implement collision
-Implement player health
 Implement game restart
 Implement real opponents
+Upgrade CLI
 Implement bigger map + moving cam
