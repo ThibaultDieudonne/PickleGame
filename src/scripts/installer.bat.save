@@ -1,7 +1,7 @@
 @echo off
 cls
 call activate main
+:lbl
 set /p "id=Module name: "
 pip install %id%
-echo Done!
-pause>nul
+goto lbl

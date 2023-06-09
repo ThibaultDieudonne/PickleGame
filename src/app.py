@@ -41,7 +41,7 @@ class Client:
         self.port = None
         self.name = None
         self.socket = None
-        self.game_data = None
+        self.gs = None
         with open('game.cfg', 'rb') as f:
             config = f.readlines()
         for line in config:
@@ -76,24 +76,25 @@ class Client:
             self.clock.tick(TICK_RATE)
             self.screen.fill(BLACK)
             if self.in_game:
-                candidate_player = self.game_data.players[self.game_data.indexes[self.name]].clone()
+                player = self.gs.players[self.gs.indexes[self.name]]
+                cq = ClientQuery(self.gs.players[self.gs.indexes[self.name]])
                 for ctrl in self.buffer:
                     if ctrl == 0:
-                        candidate_player.yloc = max(0, candidate_player.yloc - STEP)
+                        cq.yloc = max(0, cq.yloc - player.speed)
                     elif ctrl == 1:
-                        candidate_player.yloc = min(self.screen_size[1], candidate_player.yloc + STEP)
+                        cq.yloc = min(self.screen_size[1], cq.yloc + player.speed)
                     elif ctrl == 2:
-                        candidate_player.xloc = max(0, candidate_player.xloc - STEP)
+                        cq.xloc = max(0, cq.xloc - player.speed)
                     elif ctrl == 3:
-                        candidate_player.xloc = min(self.screen_size[0], candidate_player.xloc + STEP)
-                self.send_and_update(candidate_player)
-                for pl_idx, pl in enumerate(self.game_data.players):
+                        cq.xloc = min(self.screen_size[0], cq.xloc + player.speed)
+                self.send_and_update(cq)
+                for pl_idx, pl in enumerate(self.gs.players):
                     pygame.draw.circle(self.screen, PLAYER_COLORS[pl_idx], (pl.xloc, pl.yloc), pl.size)
-                for opponent in self.game_data.opponents:
+                for opponent in self.gs.opponents:
                     pygame.draw.circle(self.screen, RED, (opponent.xloc, opponent.yloc), opponent.size)
-                self.screen.blit(self.font.render("Damages taken:", False, WHITE), (2, 2))
-                for pl_idx, pl in enumerate(self.game_data.players):
-                    self.screen.blit(self.font.render(f"{pl.name}: {self.game_data.damage_taken[pl_idx]}", False, WHITE), (2, 22 + 20 * pl_idx))
+                self.screen.blit(self.font.render("Damage taken", False, WHITE), (2, 2))
+                for pl_idx, pl in enumerate(self.gs.players):
+                    self.screen.blit(self.font.render(f"{pl.name}: {self.gs.players[pl_idx].damage_taken}", False, WHITE), (2, 22 + 20 * pl_idx))
             else:
                 self.bplay.draw(self.screen)
                 
@@ -134,9 +135,8 @@ class Client:
                 packet = bytes(packet, "utf-8")
             else:
                 packet = pickle.dumps(packet)
-            self.socket.send(packet)
-            tmp_data = pickle.loads(self.socket.recv(BUFFER_SIZE))
-            self.game_data = tmp_data
+            self.socket.send(packet) 
+            self.gs = pickle.loads(self.socket.recv(BUFFER_SIZE))
         except Exception as e:
             sys.exit(0)
 

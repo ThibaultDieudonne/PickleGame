@@ -28,7 +28,7 @@ class Server:
         self.HOST = "0.0.0.0"
         self.PORT = 50000
         self.clients = []
-        self.game_data = DataHandler()
+        self.gs = GameState()
         self.ticks = 0
         with open('server.cfg', 'rb') as f:
             config = f.readlines()
@@ -37,7 +37,7 @@ class Server:
             if len(tmp) == 2:
                 if tmp[0] == "nplayers":
                     for pl in range(int(tmp[1])):
-                        self.game_data.players.append(Player("default", BASE_LOCS[pl][0], BASE_LOCS[pl][1]))
+                        self.gs.players.append(Player("default", BASE_LOCS[pl][0], BASE_LOCS[pl][1]))
         
         
     def start(self):
@@ -51,16 +51,16 @@ class Server:
         while self.running:
             time.sleep(.01)
             if not (self.ticks % 100):
-                self.game_data.opponents.append(Opponent(self.game_data.players))
-            for opp_idx in range(len(self.game_data.opponents) - 1, -1, -1):
-                opp = self.game_data.opponents[opp_idx]
+                self.gs.opponents.append(Opponent(self.gs.players))
+            for opp_idx in range(len(self.gs.opponents) - 1, -1, -1):
+                opp = self.gs.opponents[opp_idx]
                 if opp.tick():
-                    for pl_idx, pl in enumerate(self.game_data.players):
+                    for pl_idx, pl in enumerate(self.gs.players):
                         if distance(opp.xloc, opp.yloc, pl.xloc, pl.yloc) <= opp.size + pl.size:
-                            self.game_data.damage_taken[pl_idx] += opp.damage
-                            del self.game_data.opponents[opp_idx]
+                            self.gs.players[pl_idx].damage_taken += opp.damage
+                            del self.gs.opponents[opp_idx]
                 else:
-                    del self.game_data.opponents[opp_idx]
+                    del self.gs.opponents[opp_idx]
 
             self.ticks += 1
         
@@ -84,16 +84,15 @@ class Server:
         
         
     def client_handler(self, clientsocket, addr, client_idx):
-        if client_idx < len(self.game_data.players):
-            self.game_data.players[client_idx].name = clientsocket.recv(BUFFER_SIZE).decode("utf-8")
-            self.game_data.indexes[self.game_data.players[client_idx].name] = client_idx
-            packet = pickle.dumps(self.game_data)
+        if client_idx < len(self.gs.players):
+            self.gs.players[client_idx].name = clientsocket.recv(BUFFER_SIZE).decode("utf-8")
+            self.gs.indexes[self.gs.players[client_idx].name] = client_idx
+            packet = pickle.dumps(self.gs)
             clientsocket.send(packet)
             while self.server_running:
                 try:
-                    tmp_player = pickle.loads(clientsocket.recv(BUFFER_SIZE))
-                    self.game_data.players[client_idx] = tmp_player
-                    packet = pickle.dumps(self.game_data)
+                    self.gs.players[client_idx].update(pickle.loads(clientsocket.recv(BUFFER_SIZE)))
+                    packet = pickle.dumps(self.gs)
                     clientsocket.send(packet)
                 except:
                     break
@@ -104,7 +103,7 @@ class Server:
         while True:
             command = input("$:")
             if command == "players":
-                print(f"Connected players: {', '.join([pl.name for pl in self.game_data.players if pl.name != 'default'])}")
+                print(f"Connected players: {', '.join([pl.name for pl in self.gs.players if pl.name != 'default'])}")
             if command == "pause" or command == "p":
                 if self.running:
                     self.running = False

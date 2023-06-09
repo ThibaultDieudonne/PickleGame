@@ -24,29 +24,35 @@ from threading import Thread
 
 MAP_SIZE = (1024, 512)
 BUFFER_SIZE = 16384
-STEP = 8
 
 
-class DataHandler:
+class GameState:
     def __init__(self):
         self.players = []
-        self.damage_taken = [0 for _ in range(4)]
         self.indexes = {}
         self.opponents = []
 
         
 class Player:
-    def __init__(self, name, xloc=0, yloc=0, atk_cast=0, size=20):
+    def __init__(self, name, xloc=0, yloc=0, size=20, speed=8, damage_taken=0):
         self.name = name
         self.xloc = xloc
         self.yloc = yloc
-        self.atk_cast = 0
         self.size = size
+        self.speed = 8
+        self.damage_taken = damage_taken
     
     
-    def clone(self):
-        return Player(self.name, self.xloc, self.yloc, self.atk_cast, self.size)
+    def update(self, client_query):
+        self.xloc = client_query.xloc
+        self.yloc = client_query.yloc
 
+    
+class ClientQuery:
+    def __init__(self, player):
+        self.xloc = player.xloc
+        self.yloc = player.yloc
+        
     
 class Opponent:
     def __init__(self, targets, size=5, speed=1, damage=10):
