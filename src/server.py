@@ -30,6 +30,10 @@ class Server:
         self.clients = []
         self.gs = GameState()
         self.ticks = 0
+        self.read_cfg()
+        
+        
+    def read_cfg(self):
         with open('server.cfg', 'rb') as f:
             config = f.readlines()
         for line in config:
@@ -38,6 +42,8 @@ class Server:
                 if tmp[0] == "nplayers":
                     for pl in range(int(tmp[1])):
                         self.gs.players.append(Player("default", BASE_LOCS[pl][0], BASE_LOCS[pl][1]))
+                if tmp[0] == "max_damage_taken":
+                    self.max_damage_taken = int(tmp[1])
         
         
     def start(self):
@@ -56,11 +62,14 @@ class Server:
                 opp = self.gs.opponents[opp_idx]
                 if opp.tick():
                     for pl_idx, pl in enumerate(self.gs.players):
-                        if distance(opp.xloc, opp.yloc, pl.xloc, pl.yloc) <= opp.size + pl.size:
+                        if distance(opp.xloc, opp.yloc, pl.xloc, pl.yloc) <= opp.size + pl.size and pl.active:
                             self.gs.players[pl_idx].damage_taken += opp.damage
                             del self.gs.opponents[opp_idx]
                 else:
                     del self.gs.opponents[opp_idx]
+            for pl in self.gs.players:
+                if pl.damage_taken >= self.max_damage_taken:
+                    pl.active = 0
 
             self.ticks += 1
         
@@ -125,7 +134,9 @@ class Server:
                     self.runner.join()
                 self.server_running = False
                 self.server_thread.join()
-                sys.exit(0)  
+                sys.exit(0)
+            if command == "update" or command == "read_cfg":
+                self.read_cfg()
 
 
 if __name__=="__main__":

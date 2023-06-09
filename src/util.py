@@ -34,13 +34,14 @@ class GameState:
 
         
 class Player:
-    def __init__(self, name, xloc=0, yloc=0, size=20, speed=8, damage_taken=0):
+    def __init__(self, name, xloc=0, yloc=0, size=20, speed=8, damage_taken=0, active=1):
         self.name = name
         self.xloc = xloc
         self.yloc = yloc
         self.size = size
         self.speed = 8
         self.damage_taken = damage_taken
+        self.active = active
     
     
     def update(self, client_query):

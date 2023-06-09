@@ -78,15 +78,18 @@ class Client:
             if self.in_game:
                 player = self.gs.players[self.gs.indexes[self.name]]
                 cq = ClientQuery(self.gs.players[self.gs.indexes[self.name]])
-                for ctrl in self.buffer:
-                    if ctrl == 0:
-                        cq.yloc = max(0, cq.yloc - player.speed)
-                    elif ctrl == 1:
-                        cq.yloc = min(self.screen_size[1], cq.yloc + player.speed)
-                    elif ctrl == 2:
-                        cq.xloc = max(0, cq.xloc - player.speed)
-                    elif ctrl == 3:
-                        cq.xloc = min(self.screen_size[0], cq.xloc + player.speed)
+                if player.active:
+                    for ctrl in self.buffer:
+                        if ctrl == 0:
+                            cq.yloc = max(0, cq.yloc - player.speed)
+                        elif ctrl == 1:
+                            cq.yloc = min(self.screen_size[1], cq.yloc + player.speed)
+                        elif ctrl == 2:
+                            cq.xloc = max(0, cq.xloc - player.speed)
+                        elif ctrl == 3:
+                            cq.xloc = min(self.screen_size[0], cq.xloc + player.speed)
+                else:
+                    self.screen.blit(self.font.render("GAME OVER", False, WHITE), (MAP_SIZE[0] - 100, 2))
                 self.send_and_update(cq)
                 for pl_idx, pl in enumerate(self.gs.players):
                     pygame.draw.circle(self.screen, PLAYER_COLORS[pl_idx], (pl.xloc, pl.yloc), pl.size)
