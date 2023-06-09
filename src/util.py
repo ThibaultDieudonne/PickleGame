@@ -32,9 +32,31 @@ class GameState:
         self.indexes = {}
         self.opponents = []
 
+
+class Stage:
+    def __init__(self):
+        self.upgrade_frq = 1000
+        self.ticks = 0
+        self.current = 0
+        self.spawn_frqs = [100, 50, 25, 15, 10, 5]
+        self.opp_speeds = [1, 2, 4, 6, 8, 10]
+        self.tick_time = .01
+
+    def get_opp(self):
+        if self.ticks % self.spawn_frqs[self.current]:
+            return 0
+        return self.opp_speeds[self.current]
+
+    
+    def tick(self):
+        time.sleep(self.tick_time)
+        self.ticks += 1
+        if not (self.ticks % self.upgrade_frq):
+            self.current = min(len(self.spawn_frqs) - 1, self.current + 1)
+        
         
 class Player:
-    def __init__(self, name, xloc=0, yloc=0, size=20, speed=8, damage_taken=0, active=1):
+    def __init__(self, name, xloc=0, yloc=0, size=20, speed=8, damage_taken=0, active=1, score=0):
         self.name = name
         self.xloc = xloc
         self.yloc = yloc
@@ -42,6 +64,7 @@ class Player:
         self.speed = 8
         self.damage_taken = damage_taken
         self.active = active
+        self.score = score
     
     
     def update(self, client_query):

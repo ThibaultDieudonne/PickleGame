@@ -95,9 +95,14 @@ class Client:
                     pygame.draw.circle(self.screen, PLAYER_COLORS[pl_idx], (pl.xloc, pl.yloc), pl.size)
                 for opponent in self.gs.opponents:
                     pygame.draw.circle(self.screen, RED, (opponent.xloc, opponent.yloc), opponent.size)
-                self.screen.blit(self.font.render("Damage taken", False, WHITE), (2, 2))
+                self.screen.blit(self.font.render("Score", False, WHITE), (2, 2))
                 for pl_idx, pl in enumerate(self.gs.players):
-                    self.screen.blit(self.font.render(f"{pl.name}: {self.gs.players[pl_idx].damage_taken}", False, WHITE), (2, 22 + 20 * pl_idx))
+                    self.screen.blit(self.font.render(f"{pl.name}: {self.gs.players[pl_idx].score}", False, WHITE),
+                                     (2, 22 + 20 * pl_idx))
+                self.screen.blit(self.font.render("Damage taken", False, WHITE), (2, 22 + 20 * (1 + len(self.gs.players))))
+                for pl_idx, pl in enumerate(self.gs.players):
+                    self.screen.blit(self.font.render(f"{pl.name}: {self.gs.players[pl_idx].damage_taken}", False, WHITE),
+                                     (2, 42 + 20 * (1 + len(self.gs.players)) + 20 * pl_idx))
             else:
                 self.bplay.draw(self.screen)
                 

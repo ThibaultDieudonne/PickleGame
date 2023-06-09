@@ -29,7 +29,7 @@ class Server:
         self.PORT = 50000
         self.clients = []
         self.gs = GameState()
-        self.ticks = 0
+        self.stage = Stage()
         self.read_cfg()
         
         
@@ -55,9 +55,10 @@ class Server:
                        
     def run(self):
         while self.running:
-            time.sleep(.01)
-            if not (self.ticks % 100):
-                self.gs.opponents.append(Opponent(self.gs.players))
+            self.stage.tick()
+            opp_speed = self.stage.get_opp()
+            if opp_speed:
+                self.gs.opponents.append(Opponent(self.gs.players, speed=opp_speed))
             for opp_idx in range(len(self.gs.opponents) - 1, -1, -1):
                 opp = self.gs.opponents[opp_idx]
                 if opp.tick():
@@ -70,8 +71,8 @@ class Server:
             for pl in self.gs.players:
                 if pl.damage_taken >= self.max_damage_taken:
                     pl.active = 0
-
-            self.ticks += 1
+                if pl.active:
+                    pl.score += 1
         
             
     def run_server(self):
@@ -109,7 +110,7 @@ class Server:
                   
             
     def cli(self):
-        while True:
+        while self.server_running:
             command = input("$:")
             if command == "players":
                 print(f"Connected players: {', '.join([pl.name for pl in self.gs.players if pl.name != 'default'])}")
