@@ -42,7 +42,7 @@ class Client:
         self.name = None
         self.socket = None
         self.gs = None
-        with open('game.cfg', 'rb') as f:
+        with open('../player.cfg', 'rb') as f:
             config = f.readlines()
         for line in config:
             tmp = line.decode("utf-8").replace('\n', '').replace('\r', '').replace(' ', '')
