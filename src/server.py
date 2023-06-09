@@ -54,6 +54,7 @@ class Server:
 
                        
     def run(self):
+        time.sleep(3)
         while self.running:
             self.stage.tick()
             opp_speed = self.stage.get_opp()
@@ -121,7 +122,7 @@ class Server:
                     print("Game has stopped")
                 else:
                     print("Game has already stopped")
-            if command == "start" or command == "resume" or command == "s" or command == "r":
+            if command == "start" or command == "s":
                 if not self.running:
                     self.running = True
                     self.runner = Thread(target=self.run)
@@ -138,6 +139,11 @@ class Server:
                 sys.exit(0)
             if command == "update" or command == "read_cfg":
                 self.read_cfg()
+                print("Config read again")
+            if command == "reset" or command == "restart" or command == "r":
+                self.stage.reset()
+                self.gs.reset()
+                print("Game has reseted")
 
 
 if __name__=="__main__":

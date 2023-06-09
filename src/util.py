@@ -31,6 +31,12 @@ class GameState:
         self.players = []
         self.indexes = {}
         self.opponents = []
+        
+    def reset(self):
+        self.opponents = []
+        for pl in self.players:
+            pl.reset()
+            
 
 
 class Stage:
@@ -53,6 +59,10 @@ class Stage:
         self.ticks += 1
         if not (self.ticks % self.upgrade_frq):
             self.current = min(len(self.spawn_frqs) - 1, self.current + 1)
+            
+    def reset(self):
+        self.ticks = 0
+        self.current = 0
         
         
 class Player:
@@ -70,6 +80,13 @@ class Player:
     def update(self, client_query):
         self.xloc = client_query.xloc
         self.yloc = client_query.yloc
+        
+    def reset(self):
+        self.size = 20
+        self.speed = 8
+        self.damage_taken = 0
+        self.active = 1
+        self.score = 0
 
     
 class ClientQuery:

@@ -1,4 +1,3 @@
-Implement game restart
-Implement real opponents
+Implement real opponents / rewards
 Implement bigger map + moving cam
 Implement better client management
